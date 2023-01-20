@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>NANO Converter</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+	<div class="container" id="app">
+		<div id="title">
+			<h2>{{appName}}</h2>
+		</div>
+
+		<main>
+			<section id="number-system">
+				<h2 class="title">Number System Conversion</h2>
+				<div class="box">
+					<div class="input-group">
+						<label for="">Decimal</label>
+						<input type="text" class="form-control" v-model="numbers.decimal">
+					</div>
+					<div class="input-group">
+						<label for="">Binary</label>
+						<input type="text" class="form-control" v-model="numbers.binary">
+					</div>
+					<div class="input-group">
+						<label for="">Octal</label>
+						<input type="text" class="form-control" v-model="numbers.octal">
+					</div>
+					<div class="input-group">
+						<label for="">Hexa-decimal</label>
+						<input type="text" class="form-control" v-model="numbers.hexadecimal">
+					</div>
+					<div class="btn-group">
+						<p v-if="invalidNumber" style="color:crimson;">Invalid Input</p>
+						<button type="button"class="reset-btn" @click="resetNumbers">Reset</button>
+					</div>					
+				</div>
+			</section>
+
+
+			<section id="text-conversion">
+				<h2 class="title">Text System Conversion</h2>
+				<div class="box">
+					<div class="input-group">
+						<label for="">Enter Your Text</label>
+						<textarea class="textarea" v-model="lines.text"></textarea>
+					</div>
+					<div class="input-group">
+						<label for="">Generated Binary Code</label>
+						<textarea class="textarea" v-model="lines.binary"></textarea>
+					</div>
+					<div class="btn-group">
+						<button type="button"class="reset-btn" @click="resetLines">Reset</button>
+					</div>						
+				</div>
+			</section>
+		</main>
+
+
+	</div>
+
+
+	<script>
+
+		function isBinary(text){
+			for(let t of text){
+				if(t != '0' && t != '1') return false
+			}
+
+			return true
+		}
+
+
+		function isOctal(text){
+			for(let t of text){
+				if(t < '0' || t > '7') return false
+			}
+
+			return true
+		}
+
+		function isHex(text){
+			for(let t of text){
+				if((t < '0' || t > '9') && (t < 'A' || t > 'F') && (t < 'a' || t > 'f')){
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+
+		//Text to Binary
+		function textToBinary(text){
+			const charCodeArray = [];
+			for(let i in text){
+				charCodeArray.push(text.charCodeAt(i));
+			}
+
+			const binaryArray = charCodeArray.map((char) =>{
+				return char.toString(2)
+			})
+
+			return binaryArray;
+		}
+
+
+		//Binary to Text
+		function binaryToText(codeArray){
+			let text = '';
+
+			for(let code of codeArray){
+				const char = String.fromCharCode(parseInt(code, 2));
+				text = text.concat(char)
+			}
+			return text;
+		}
+
+
+        const { createApp } = Vue
+
+        createApp({
+			created(){
+				document.title = "NANO Converter"
+			},
+            data() {
+                return {
+                    appName: 'NANO Converter',
+					numbers: {
+						decimal: 0,
+						binary:0,
+						octal:0,
+						hexadecimal:0
+					},
+
+					lines: {
+						text: '',
+						binary: ''
+					},
+
+					invalidNumber: false,
+					invalidLine: false
+
+                }
+            },
+
+			methods: {
+				resetNumbers(){
+					this.numbers = {
+						decimal:0,
+						binary:0,
+						octal:0,
+						hexadecimal:0
+					}
+					this.invalidNumber = false
+				},
+				resetLines(){
+					this.lines = {
+						text:'',
+						binary:''
+					}
+					this.invalidLine = false
+				},
+			},
+
+			watch: {
+				'numbers.decimal': function(value){
+					this.numbers.decimal = parseInt(value) || 0;
+					this.numbers.binary = value.toString(2);
+					this.numbers.octal = value.toString(8);
+					this.numbers.hexadecimal = value.toString(16)
+				},
+				'numbers.binary': function(value){
+					let decimal = parseInt(value, 2)
+
+					if(!isBinary(value)){
+						this.invalidNumber = true
+					}else{
+						this.invalidNumber = false
+					}
+
+					this.numbers.decimal = decimal;
+					this.numbers.binary = value || 0;
+					this.numbers.octal = decimal.toString(8);
+					this.numbers.hexadecimal = decimal.toString(16);
+				},
+				'numbers.octal': function(value){
+					let decimal = parseInt(`0${value}`, 8) || 0
+
+					if(!isOctal(value)){
+						this.invalidNumber = true
+					}else{
+						this.invalidNumber = false
+					}
+
+					this.numbers.decimal = decimal;
+					this.numbers.binary = decimal.toString(2) || 0;
+					this.numbers.octal = value || 0;
+					this.numbers.hexadecimal = decimal.toString(16);
+
+				},
+				'numbers.hexadecimal': function(value){
+					let decimal = parseInt(`0x${value}`, 16) || 0;
+
+					if(!isHex(value)){
+						this.invalidNumber = true;
+					}else{
+						this.invalidNumber = false;
+					}
+
+					this.numbers.decimal = decimal;
+					this.numbers.binary = decimal.toString(2) || 0;
+					this.numbers.octal = decimal.toString(8);
+					this.numbers.hexadecimal = value || 0;	
+				},
+				'lines.text': function(value){
+					if(value.length === 0){
+						this.lines.binary = ''
+					}else{
+						const codeArray = textToBinary(value)
+
+						this.lines.binary = codeArray.join(' ')
+					}
+				},
+				'lines.binary': function(value){
+					if(value.length === 0){
+						this.lines.text = ''
+					}else{
+						const codeArray = value.split(' ')
+						const text = binaryToText(codeArray)
+						this.lines.text = text;
+					}
+				}
+
+
+			}
+        }).mount('#app')
+    </script>
+</body>
+</html>
